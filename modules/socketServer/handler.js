@@ -37,8 +37,8 @@ function validate(req, res, next) {
                         req.error = 'Subscription expired';
                         return next();
                     }
-                    const hostname = ( req.headers.host.match(/:/g) ) ? req.headers.host.slice(0, req.headers.host.indexOf(":")) : req.headers.host;
-                    if (_.indexOf(project.allowedHosts, hostname) < 0) {
+                    const hostname = extractDomain(req);
+                    if (!hostname || _.indexOf(project.allowedHosts, hostname) < 0) {
                         req.error = 'Module not support following host';
                         return next();
                     }
@@ -71,6 +71,24 @@ function serverFile(req, res) {
     }
     res.setHeader('content-type', 'text/javascript');
     return res.send(content)
+}
+
+function extractDomain(req){
+    const url = req.headers.referer;
+    let domain = '';
+    if(!url){
+        return false;
+    }
+
+    if (url.indexOf("://") > -1)
+        domain = url.split('/')[2];
+    else
+        domain = url.split('/')[0];
+
+    //find & remove port number
+    domain = domain.split(':')[0];
+
+    return domain;
 }
 
 export default {validate, serverFile}
