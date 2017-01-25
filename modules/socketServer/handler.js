@@ -53,6 +53,7 @@ function validate(req, res, next) {
 
         })
         .catch(error => {
+            console.log('ERROR', error);
             req.error = 'Module not purchased';
             return next();
         })

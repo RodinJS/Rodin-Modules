@@ -39,12 +39,12 @@ assignedModulesSchema.statics = {
                     return module;
                 }
                 else {
-                    const err = new APIError('No such project exists!----', httpStatus.NOT_FOUND, true);
+                    const err = new APIError('No such Assigned module exists!----', httpStatus.NOT_FOUND, true);
                     return Promise.reject(err);
                 }
             })
             .catch((e) => {
-                const err = new APIError('No such project exists!', httpStatus.NOT_FOUND, true);
+                const err = new APIError('No such Assigned module exists!', httpStatus.NOT_FOUND, true);
                 return Promise.reject(err);
             });
     },
