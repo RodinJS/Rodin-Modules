@@ -13,7 +13,8 @@ import winstonInstance from './winston';
 import routes from '../server/routes';
 import config from './env';
 import APIError from '../server/helpers/APIError';
-
+import tunnel from 'tunnel-ssh';
+import _      from 'lodash';
 
 import Promise from 'bluebird';
 import mongoose from 'mongoose';
@@ -22,11 +23,67 @@ import mongoose from 'mongoose';
 Promise.promisifyAll(mongoose);
 
 // connect to mongo db
-mongoose.connect(config.db, { server: { socketOptions: { keepAlive: 1 } } });
-mongoose.connection.on('error', () => {
-    throw new Error(`unable to connect to database: ${config.db}`);
+
+
+/**
+ *
+ *
+ * var dbConfig = {
+   username:'root',
+   host:'178.62.229.191',
+   privateKey:require('fs').readFileSync('/root/.ssh/id_rsa'),
+   port:22,
+   dstPort:27017
+};
+
+ var server = tunnel(config, function (error, server) {
+   if(error){
+       console.log("SSH connection error: " + error);
+   }
+   mongoose.connect('mongodb://localhost:27017/rodin-js-api-development');
+
+   var db = mongoose.connection;
+   db.on('error', console.error.bind(console, 'DB connection error:'));
+   db.once('open', function() {
+       // we're connected!
+       console.log("DB connection successful");
+   });
 });
 
+ [1:49]
+ var tunnel = require('tunnel-ssh');
+ *
+ *
+ */
+
+
+if (config.env === 'local') {
+    mongoose.connect(config.db, { server: { socketOptions: { keepAlive: 1 } } });
+    mongoose.connection.on('error', () => {
+        throw new Error(`unable to connect to database: ${config.db}`);
+    });
+}
+else{
+    const dbConfig = _.omit(config.db, ['url']);
+    tunnel(dbConfig,  (error, server) => {
+        if(error){
+            console.log("SSH connection error: " + error);
+        }
+        mongoose.connect(config.db.url);
+
+        let db = mongoose.connection;
+        db.on('error', console.error.bind(console, 'DB connection error:'));
+        db.once('open', function() {
+            // we're connected!
+            console.log("DB connection successful");
+        });
+    });
+/*
+    mongoose.connect(config.db, { server: { socketOptions: { keepAlive: 1 } } });
+    mongoose.connection.on('error', () => {
+        throw new Error(`unable to connect to database: ${config.db}`);
+    });*/
+}
 const app = express();
 
 if (config.env === 'development') {
