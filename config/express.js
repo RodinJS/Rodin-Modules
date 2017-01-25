@@ -65,6 +65,8 @@ if (config.env === 'local') {
 }
 else{
     const dbConfig = _.omit(config.db, ['url']);
+    dbConfig.privateKey = require('fs').readFileSync('/root/.ssh/id_rsa');
+
     tunnel(dbConfig,  (error, server) => {
         if(error){
             console.log("SSH connection error: " + error);
