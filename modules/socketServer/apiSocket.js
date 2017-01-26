@@ -28,7 +28,7 @@ class RodinNS {
 
         socket.on('broadcastToAll', (data)=> this.broadcastToAll(data));
 
-        socket.on('disconnect', (data)=> this.socketDisconnected(data));
+        socket.on('disconnect', (data)=> this.socketDisconnected(socket, data));
 
         socket.on('message', (data)=> this.sendMessageToSocket(socket, data));
 
@@ -47,7 +47,8 @@ class RodinNS {
     }
 
     socketDisconnected(socket, data){
-        this.broadcastToAll('socketDisconnected', {socketId:socket.id});
+        console.log('socketDisconnected', socket.id);
+        this.broadcastToAll({event:'socketDisconnected', data:{socketId:socket.id}});
     }
 
     sendMessageToRequester(socket, channel, data){
