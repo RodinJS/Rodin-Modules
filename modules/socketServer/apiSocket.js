@@ -50,7 +50,6 @@ class RodinNS {
     }
 
     socketDisconnected(socket, data){
-        console.log('socketDisconnected', socket.id);
         this.broadcastToAll({event:'socketDisconnected', data:{socketId:socket.id.replace(`/${this.namespace}#`, '')}});
     }
 
