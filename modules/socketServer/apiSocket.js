@@ -24,6 +24,8 @@ class RodinNS {
 
         socket.userData  = _.omit(socket.handshake.query, ['EIO', 'transport', 'ns', 't']);
 
+        socket.userData.socketId = socket.id;
+
         socket.on('broadcastToAll', (data)=> this.broadcastToAll(data));
 
         socket.on('message', (data)=> this.sendMessageToSocket(socket, data));
