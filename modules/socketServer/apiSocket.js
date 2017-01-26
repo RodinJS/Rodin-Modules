@@ -14,6 +14,7 @@ class RodinNS {
 
     constructor(io, namespace) {
         this.join = this.join.bind(this);
+        this.namespace = namespace;
         this.io = io.of('/'+namespace);
         this.io.on('connection', this.join);
     }
@@ -24,7 +25,9 @@ class RodinNS {
 
         socket.userData  = _.omit(socket.handshake.query, ['EIO', 'transport', 'ns', 't']);
 
-        socket.userData.socketId = socket.id;
+        socket.userData.socketId = socket.id.replace(`/${this.namespace}`, '');
+
+        socket.on('setData', (data)=> this.setUserData(socket, data));
 
         socket.on('broadcastToAll', (data)=> this.broadcastToAll(data));
 
@@ -55,6 +58,11 @@ class RodinNS {
         socket.emit(channel, data);
     }
 
+    setUserData(socket, data){
+        Object.assign(socket.userData, data);
+        this.sendMessageToRequester(socket, 'setUserData', socket.userData);
+    }
+
     broadcastToRoom(data){
         this.io.to(data.roomName).emit(data.eventName || 'broadcastToRoom', data.data);
     }
@@ -66,7 +74,7 @@ class RodinNS {
     getConnectedUsersList(socket, data){
 
         let connectedUsers = _.filter(_.map(this.io.connected, (socket)=>{
-            return _.pick(socket, ['userData', 'id']);
+            return _.pick(socket, ['userData']).userData;
         }), (user)=>{
             return socket.id != user.id;
         });
