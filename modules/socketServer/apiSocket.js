@@ -28,6 +28,8 @@ class RodinNS {
 
         socket.on('broadcastToAll', (data)=> this.broadcastToAll(data));
 
+        socket.on('disconnect', (data)=> this.socketDisconnected(data));
+
         socket.on('message', (data)=> this.sendMessageToSocket(socket, data));
 
         socket.on('joinRoom', (data)=> this.joinRoom(socket, data));
@@ -42,6 +44,10 @@ class RodinNS {
 
         socket.on('getConnectedUsersList', (data)=> this.getConnectedUsersList(socket, data));
 
+    }
+
+    socketDisconnected(socket, data){
+        this.broadcastToAll('socketDisconnected', {socketId:socket.id});
     }
 
     sendMessageToRequester(socket, channel, data){
