@@ -144,7 +144,7 @@ class RodinSocket {
 
     getConnectedUsersList() {
         if (this.validateSocketConnection('getConnectedUsersList', {})) {
-            this.Socket.emit('getConnectedUsersList', data);
+            this.Socket.emit('getConnectedUsersList', {});
         }
     }
 
