@@ -25,7 +25,7 @@ class RodinNS {
 
         socket.userData  = _.omit(socket.handshake.query, ['EIO', 'transport', 'ns', 't']);
 
-        socket.userData.socketId = socket.id.replace(`/${this.namespace}`, '');
+        socket.userData.socketId = socket.id.replace(`/${this.namespace}#`, '');
 
         socket.on('setData', (data)=> this.setUserData(socket, data));
 
@@ -51,7 +51,7 @@ class RodinNS {
 
     socketDisconnected(socket, data){
         console.log('socketDisconnected', socket.id);
-        this.broadcastToAll({event:'socketDisconnected', data:{socketId:socket.id}});
+        this.broadcastToAll({event:'socketDisconnected', data:{socketId:socket.id.replace(`/${this.namespace}#`, '')}});
     }
 
     sendMessageToRequester(socket, channel, data){
