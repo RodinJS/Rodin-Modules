@@ -60,7 +60,7 @@ class RodinNS {
 
     setUserData(socket, data){
         Object.assign(socket.userData, data);
-        this.sendMessageToRequester(socket, 'setUserData', socket.userData);
+        this.sendMessageToRequester(socket, 'setData', socket.userData);
     }
 
     broadcastToRoom(data){
