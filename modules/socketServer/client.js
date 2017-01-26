@@ -34,6 +34,7 @@ class RodinSocket {
         this.reconnect = this.reconnect.bind(this);
         this.disconnect = this.disconnect.bind(this);
         this.onConnected = this.onConnected.bind(this);
+        this.setData = this.setData.bind(this);
         this.validateSocketConnection = this.validateSocketConnection.bind(this);
     }
 
@@ -139,6 +140,12 @@ class RodinSocket {
         const data = {event: 'sendMessageToUser', socketIds: socketId, message: message};
         if (this.validateSocketConnection('message', data)) {
             this.Socket.emit('message', data);
+        }
+    }
+
+    setData(data){
+        if (this.validateSocketConnection('setData', data)) {
+            this.Socket.emit('setData', data);
         }
     }
 
