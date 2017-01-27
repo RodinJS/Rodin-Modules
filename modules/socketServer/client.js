@@ -35,6 +35,8 @@ class RodinSocket {
         this.disconnect = this.disconnect.bind(this);
         this.onConnected = this.onConnected.bind(this);
         this.setData = this.setData.bind(this);
+        this.mySocketId = this.mySocketId.bind(this);
+        this.isMe = this.isMe.bind(this);
         this.validateSocketConnection = this.validateSocketConnection.bind(this);
     }
 
@@ -65,6 +67,15 @@ class RodinSocket {
         this.Socket.disconnect();
     }
 
+    mySocketId(){
+        return this.Socket.id
+    }
+
+    isMe(data){
+        if(data.socketId == this.Socket.id) return true;
+        return false;
+    }
+
     subscribeToEvents() {
         this.Socket.on('connect', (socket) => this.connected(socket));
         this.Socket.on('subscribeToApp', this.subscribe);
@@ -81,7 +92,6 @@ class RodinSocket {
         if (Object.keys(this.listenerBuffer).length > 0) {
             for (let key in this.listenerBuffer) {
                 if(key == 'connection'){
-                    console.log(this.Socket.connected);
                     this.listenerBuffer[key](this.Socket.connected);
                 }
                 else{
@@ -185,7 +195,6 @@ class RodinSocket {
     subscribe() {
         const url = `${params.host}/socket-server/subscribe`;
         const method = 'POST';
-        console.log(url, params);
         return new Promise((resolve, reject) => {
             const req = new XMLHttpRequest();
             req.open(method, url);
