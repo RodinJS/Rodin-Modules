@@ -69,15 +69,6 @@ class RodinNS {
     }
 
     broadcastToAll(socket, data){
-        if(socket.lastEmit){
-            const duration = moment.duration(moment().diff(socket.lastEmit));
-            const diff = duration.asMilliseconds();
-            console.log('DIFF', diff);
-            if(diff < 70){
-                return socket.disconnect();
-            }
-        }
-        socket.lastEmit = moment();
         data.data.socketId = socket.userData.socketId;
         this.io.emit(data.event, data.data);
     }
