@@ -5,6 +5,7 @@
 
 import sio from 'socket.io';
 import _ from 'lodash';
+import moment from 'moment';
 
 const Service = {
     namespaces:{}
@@ -29,7 +30,7 @@ class RodinNS {
 
         socket.on('setData', (data)=> this.setUserData(socket, data));
 
-        socket.on('broadcastToAll', (data)=> this.broadcastToAll(data));
+        socket.on('broadcastToAll', (data)=> this.broadcastToAll(socket, data));
 
         socket.on('disconnect', (data)=> this.socketDisconnected(socket, data));
 
@@ -43,14 +44,14 @@ class RodinNS {
 
         socket.on('deleteRoom', (data)=> this.deleteRoom(socket, data));
 
-        socket.on('broadcastToRoom', (data)=> this.broadcastToRoom(data));
+        socket.on('broadcastToRoom', (data)=> this.broadcastToRoom(socket, data));
 
         socket.on('getConnectedUsersList', (data)=> this.getConnectedUsersList(socket, data));
 
     }
 
     socketDisconnected(socket, data){
-        this.broadcastToAll({event:'socketDisconnected', data:{socketId:socket.id.replace(`/${this.namespace}#`, '')}});
+        this.broadcastToAll(socket, {event:'socketDisconnected', data:{socketId:socket.id.replace(`/${this.namespace}#`, '')}});
     }
 
     sendMessageToRequester(socket, channel, data){
@@ -62,11 +63,22 @@ class RodinNS {
         this.sendMessageToRequester(socket, 'setData', socket.userData);
     }
 
-    broadcastToRoom(data){
+    broadcastToRoom(socket, data){
+        data.data.socketId = socket.userData.socketId;
         this.io.to(data.roomName).emit(data.eventName || 'broadcastToRoom', data.data);
     }
 
-    broadcastToAll(data){
+    broadcastToAll(socket, data){
+        if(socket.lastEmit){
+            const duration = moment.duration(moment().diff(socket.lastEmit));
+            const diff = duration.asMilliseconds();
+            console.log('DIFF', diff);
+            if(diff < 70){
+                return socket.disconnect();
+            }
+        }
+        socket.lastEmit = moment();
+        data.data.socketId = socket.userData.socketId;
         this.io.emit(data.event, data.data);
     }
 
@@ -100,7 +112,7 @@ class RodinNS {
     joinRoom(socket, data){
         socket.join(data.roomName);
         if(data.notifyAll){
-           this.broadcastToRoom({roomName:data.roomName, eventName:'joinRoom', data:socket.userData})
+           this.broadcastToRoom(socket, {roomName:data.roomName, eventName:'joinRoom', data:socket.userData})
         }
         return this.sendMessageToRequester(socket, 'message', {error:false, message:`Joined to ${data.roomName} room`});
     }
@@ -111,7 +123,7 @@ class RodinNS {
         }
         socket.leave(data.roomName);
         if(data.notifyAll){
-            this.broadcastToRoom({roomName:data.roomName, eventName:'leaveRoom', data:socket.userData})
+            this.broadcastToRoom(socket, {roomName:data.roomName, eventName:'leaveRoom', data:socket.userData})
         }
         return this.sendMessageToRequester(socket, 'message', {error:false, message:`Leaved from ${data.roomName} room`});
     }
@@ -121,7 +133,7 @@ class RodinNS {
             return this.sendMessageToRequester(socket, 'onError', {error:true, message:`${data.roomName} not exist`});
         }
         _.each(this.io.adapter.rooms[data.roomName].sockets, (connected, socketId) =>{
-            this.broadcastToRoom({roomName:data.roomName, eventName:'leaveRoom', data:this.io.connected[socketId].userData});
+            this.broadcastToRoom(socket, {roomName:data.roomName, eventName:'leaveRoom', data:this.io.connected[socketId].userData});
             this.io.connected[socketId].leave(data.roomName);
         });
         return this.sendMessageToRequester(socket, 'message', {error:false, message:`${data.roomName} room deleted`});
