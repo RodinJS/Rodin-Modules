@@ -4,6 +4,7 @@
 
 import SubscribedModules  from '../../server/models/subscribe';
 import AssignedModules from '../../server/models/assigned';
+import Project  from '../../server/models/project';
 import APIError from '../../server/helpers/APIError';
 import httpStatus from '../../server/helpers/httpStatus';
 import fs from 'fs';
@@ -17,14 +18,14 @@ function validate(req, res, next) {
     }
 
     AssignedModules.get(req.query.projectId)
-        .then(project => {
-            if(!project){
+        .then(module => {
+            if(!module){
                 req.error = 'Module not assigned to current project';
                 return next();
             }
-            project = project.toObject();
+            module = module.toObject();
 
-            SubscribedModules.getByOwnerAndModuleId(project.owner, project.moduleId)
+            SubscribedModules.getByOwnerAndModuleId(module.owner, module.moduleId)
                 .then(subscribed=>{
 
                     if(!subscribed){
@@ -37,13 +38,35 @@ function validate(req, res, next) {
                         req.error = 'Subscription expired';
                         return next();
                     }
-                    const hostname = extractDomain(req);
-                    if (!hostname || _.indexOf(project.allowedHosts, hostname) < 0) {
-                        req.error = 'Module not support following host';
-                        return next();
-                    }
-                    req.project = project;
-                    return next();
+
+
+                    Project.get(req.query.projectId)
+                        .then(project=>{
+                            if(!project){
+                                req.error = 'Module not support following host';
+                                return next();
+                            }
+                            const allowedHosts = ['rodin.space', 'rodin.io', 'rodin.design', 'localhost'];
+                            project = project.toObject();
+
+                            if(project.domain)
+                                allowedHosts.push(project.domain);
+
+                            const hostname = extractDomain(req);
+                            if (!hostname || _.indexOf(allowedHosts, hostname) < 0) {
+                                req.error = 'Module not support following host';
+                                return next();
+                            }
+                            req.module = module;
+                            return next();
+
+
+                        })
+                        .catch( err =>{
+                            console.log('ERROR', error);
+                            req.error = 'Module not support following host';
+                            return next();
+                        });
 
                 })
                 .catch(err=>{
@@ -61,7 +84,7 @@ function validate(req, res, next) {
 
 function serverFile(req, res) {
     let content = '';
-    if (!req.project) {
+    if (!req.module) {
         content = `var error = '${req.error}';\n throw new Error(error);`;
     }
     else{
