@@ -1,6 +1,7 @@
 export default {
     env: 'development',
     jwtSecret: '4DNSrMPuQ3Y3McBu96wd2GzGheDXuft8gDqLEQVWHnXQfcaGFtM2ZBgyNYzPN7CK',
+    API: 'https://api.rodin.space/api',
     db: {
         username:'root',
         host:'178.62.229.191',

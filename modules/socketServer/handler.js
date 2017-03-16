@@ -1,14 +1,14 @@
 /**
  * Created by xgharibyan on 1/12/17.
  */
-
-import SubscribedModules  from '../../server/models/subscribe';
-import AssignedModules from '../../server/models/assigned';
-import Project  from '../../server/models/project';
 import APIError from '../../server/helpers/APIError';
 import httpStatus from '../../server/helpers/httpStatus';
 import fs from 'fs';
 import _ from 'lodash';
+import config from '../../config/env';
+import request from 'request-promise';
+const HookSecretKey = 'K7rd6FzEZwzcc6dQr3cv9kz4tTTZzAc9hdXYJpukvEnxmbdB42V4b6HePs5ZDTYLW_4000dram_module';
+const APIURL = config.API;
 
 
 function validate(req, res, next) {
@@ -17,69 +17,30 @@ function validate(req, res, next) {
         return next(err);
     }
 
-    AssignedModules.get(req.query.projectId)
-        .then(module => {
-            if(!module){
-                req.error = 'Module not assigned to current project';
-                return next();
-            }
-            module = module.toObject();
-
-            SubscribedModules.getByOwnerAndModuleId(module.owner, module.moduleId)
-                .then(subscribed=>{
-
-                    if(!subscribed){
-                        req.error = 'Module not purchased';
-                        return next();
-                    }
-
-                    subscribed = subscribed.toObject();
-                    if(new Date(subscribed.expiredAt) <= new Date()){
-                        req.error = 'Subscription expired';
-                        return next();
-                    }
+    const options = {
+        method: 'GET',
+        uri: `${APIURL}/modules/hook/validate`,
+        qs:{
+           'projectId':req.query.projectId
+        },
+        headers: {
+            'x-access-token': HookSecretKey
+        },
+        json: true,
+    };
 
 
-                    Project.get(req.query.projectId)
-                        .then(project=>{
-                            if(!project){
-                                req.error = 'Module not support following host';
-                                return next();
-                            }
-                            const allowedHosts = ['rodin.space', 'rodin.io', 'rodin.design', 'localhost'];
-                            project = project.toObject();
-
-                            if(project.domain)
-                                allowedHosts.push(project.domain);
-
-                            const hostname = extractDomain(req);
-                            if (!hostname || _.indexOf(allowedHosts, hostname) < 0) {
-                                req.error = 'Module not support following host';
-                                return next();
-                            }
-                            req.module = module;
-                            return next();
-
-
-                        })
-                        .catch( err =>{
-                            console.log('ERROR', error);
-                            req.error = 'Module not support following host';
-                            return next();
-                        });
-
-                })
-                .catch(err=>{
-                    req.error = 'Module not purchased';
-                    return next();
-                });
-
+    request(options)
+        .then((response) => {
+           req.module = true;
+           return next();
         })
-        .catch(error => {
-            console.log('ERROR', error);
-            req.error = 'Module not purchased';
+        .catch((err)  => {
+            req.error  = err.error.error ? err.error.error.message : 'Please contact with support';
             return next();
-        })
+        });
+
+
 }
 
 function serverFile(req, res) {
@@ -95,23 +56,4 @@ function serverFile(req, res) {
     res.setHeader('content-type', 'text/javascript');
     return res.send(content)
 }
-
-function extractDomain(req){
-    const url = req.headers.referer;
-    let domain = '';
-    if(!url){
-        return false;
-    }
-
-    if (url.indexOf("://") > -1)
-        domain = url.split('/')[2];
-    else
-        domain = url.split('/')[0];
-
-    //find & remove port number
-    domain = domain.split(':')[0];
-
-    return domain;
-}
-
 export default {validate, serverFile}

@@ -57,7 +57,7 @@ Promise.promisifyAll(mongoose);
  */
 
 
-if (config.env === 'local') {
+/*if (config.env === 'local') {
     mongoose.connect(config.db, { server: { socketOptions: { keepAlive: 1 } } });
     mongoose.connection.on('error', () => {
         throw new Error(`unable to connect to database: ${config.db}`);
@@ -80,12 +80,12 @@ else{
             console.log("DB connection successful");
         });
     });
-/*
+/!*
     mongoose.connect(config.db, { server: { socketOptions: { keepAlive: 1 } } });
     mongoose.connection.on('error', () => {
         throw new Error(`unable to connect to database: ${config.db}`);
-    });*/
-}
+    });*!/
+}*/
 const app = express();
 
 if (config.env === 'development') {
