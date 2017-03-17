@@ -24,7 +24,8 @@ function validate(req, res, next) {
            'projectId':req.query.projectId
         },
         headers: {
-            'x-access-token': HookSecretKey
+            'x-access-token': HookSecretKey,
+            'referer':req.headers.referer
         },
         json: true,
     };
