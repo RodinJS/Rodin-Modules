@@ -1,7 +1,7 @@
 export default {
-    env: 'development',
+    env: 'stage',
     jwtSecret: '4DNSrMPuQ3Y3McBu96wd2GzGheDXuft8gDqLEQVWHnXQfcaGFtM2ZBgyNYzPN7CK',
-    API: 'https://api.rodin.space/api',
+    API: 'https://api.rodin.design/api',
     db: {
         username:'root',
         host:'178.62.229.191',
@@ -12,8 +12,8 @@ export default {
 
     modules: {
         socketService: {
-            URL:'https://dev.modules.rodin.io',
-            port: 4001,
+            URL:'https://stage.modules.rodin.io',
+            port: 4002,
         }
     }
 };
