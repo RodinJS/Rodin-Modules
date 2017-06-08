@@ -1,6 +1,6 @@
-import config from '../../config/env';
-import app from '../../config/express';
-import apiSocket from './apiSocket';
+import config from '../config/env';
+import app from '../config/express';
+import apiSocket from '../modules/rodin/socketServer/apiSocket';
 const debug = require('debug')('rodin-ja-api:index');
 import https from 'https';
 import fs from 'fs';
@@ -19,6 +19,7 @@ else{
     server = app.listen(config.modules.socketService.port, () => {
         debug(`server started on port ${config.modules.socketService.port} (${config.env})`);
     });
+    console.log(`server started on port ${config.modules.socketService.port} (${config.env})`);
     apiSocket.run(server);
 }
 

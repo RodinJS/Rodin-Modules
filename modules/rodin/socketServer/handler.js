@@ -1,11 +1,11 @@
 /**
  * Created by xgharibyan on 1/12/17.
  */
-import APIError from '../../server/helpers/APIError';
-import httpStatus from '../../server/helpers/httpStatus';
+import APIError from '../../../server/helpers/APIError';
+import httpStatus from '../../../server/helpers/httpStatus';
 import fs from 'fs';
 import _ from 'lodash';
-import config from '../../config/env';
+import config from '../../../config/env';
 import request from 'request-promise';
 const HookSecretKey = 'K7rd6FzEZwzcc6dQr3cv9kz4tTTZzAc9hdXYJpukvEnxmbdB42V4b6HePs5ZDTYLW_4000dram_module';
 const APIURL = config.API;
