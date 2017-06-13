@@ -1,6 +1,6 @@
 import config from '../config/env';
 import app from '../config/express';
-import apiSocket from '../modules/rodin/socketServer/apiSocket';
+import apiSocket from '../modules/server/rodin/socketServer/apiSocket';
 const debug = require('debug')('rodin-ja-api:index');
 import https from 'https';
 import fs from 'fs';

@@ -1,6 +1,6 @@
 import express from 'express';
-import socketServiceRouter from '../modules/rodin/socketServer/router';
-import thirdPartyModules from './routes/ThirdPartModules';
+import socketServiceRouter from '../modules/server/rodin/socketServer/router';
+import Modules from './routes/Modules';
 import _ from 'lodash';
 
 const router = express.Router();	// eslint-disable-line new-cap
@@ -12,7 +12,7 @@ const apiRoutes = {
     },
     modules:{
         route:'/modules',
-        module:[thirdPartyModules]
+        module:[Modules]
     }
 };
 /** GET /health-check - Check service health */
