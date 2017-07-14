@@ -15,8 +15,9 @@ const closureCompiler = CP.gulp();
 const plugins = gulpLoadPlugins();
 const testPath = './server/tests/';
 const paths = {
-    js: ['./**/*.js', '!dist/**', '!projects/**', '!publish/**', '!public/**', '!node_modules/**', '!coverage/**', '!modules/client/**'],
+    js: ['./**/*.js', '!dist/**', '!projects/**', '!publish/**', '!public/**', '!node_modules/**', '!coverage/**',  '!modules/client/**',  '!publicModules/**'],
     modulesClient: ['./modules/client/rodin/**/*.js'],
+    //`./node_modules/socket.io-client/dist/socket.io.js`
     nonJs: ['./package.json', './.gitignore'],
     tests: './server/tests/*.js',
     singleTestFile: ['' + testPath + '1.user.test.js', '' + testPath + '2.projects.test.js', '' + testPath + '99.removeUser.test.js']
@@ -190,12 +191,14 @@ gulp.task('closureCompiler', () => {
     return gulp.src(paths.modulesClient)
         .pipe(foreach((stream, file) => {
             const fileArr = file.path.split('/');
-            const folderName = fileArr[fileArr.length - 2];
+            const folderName = fileArr[fileArr.length-1] == 'socket.io.js' ? fileArr[fileArr.length - 3] :  fileArr[fileArr.length - 2];
             return stream
                 .pipe(closureCompiler({
-                    compilation_level: 'SIMPLE',
-                    js_output_file: 'client.js'
+                    //compilation_level: 'WHITESPACE_ONLY',
+                    js_output_file: 'client.js',
+                    //output_wrapper: '(function () {\n%output%\n}())'
                 }))
+                //.pipe(plugins.babel())
                 .pipe(gulp.dest(`publicModules/rodin/${folderName}`));
         }));
 });

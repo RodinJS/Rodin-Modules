@@ -51,7 +51,6 @@ function validate(req, res, next) {
 
 }
 
-
 function serverFile(req, res) {
     let content = '';
     if (!req.module) {

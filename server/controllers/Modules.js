@@ -55,16 +55,16 @@ function validate(req, res, next) {
 
 function serverFile(req, res) {
 
+    req.modules = req.body.modules || req.modules;
+
     let content = '';
     if (!req.modules || req.modules.length <= 0) {
         content += `var error = '${req.error || 'No assigned modules'}';\n throw new Error(error);`;
     }
-
-
     else{
         _.each(req.modules, (moduleData, key)=>{
             if(moduleData.error){
-
+                content += `var error = '${moduleData.error || 'Bad request'}';\n throw new Error(error);`;
             }
             const module = moduleData.module;
             const moduleOwnerDirName = module.author == 'Rodin team' ? 'rodin' : 'users';
@@ -72,9 +72,19 @@ function serverFile(req, res) {
             const moduleDir = `${moduleGlobalDir}${module.url}`;
             const indexFile = `${moduleDir}/client.js`;
 
-            content += `${fs.readFileSync(indexFile, 'utf8')}`;
-        });
 
+           /* if(module.url += 'socketServer'){
+                const socketIoPath = `${moduleGlobalDir}socket.io.js`;
+                const socketIO = `${__dirname}/../../../node_modules/socket.io-client/dist/socket.io.js`;
+
+                //(function () {\n%output%\n}())
+
+                //content += `${fs.readFileSync(socketIO, 'utf8')}\n\n\n`;
+                content += `\n${fs.readFileSync(socketIoPath, 'utf8')}\n\n`;
+
+            }*/
+            content += `\n${fs.readFileSync(indexFile, 'utf8')}\n\n`;
+        });
     }
     res.setHeader('content-type', 'text/javascript');
     return res.send(content)
@@ -151,8 +161,15 @@ function submit(req, res, next){
         .catch(err => _onError(res, err, false));
 }
 
-function approve(req, res, next){
+function approveReject(req, res, next){
     const module = req.module.data;
+    req.body.status = req.params.statusParam;
+    req.body.module = module;
+    if(req.body.status == 'Rejected') {
+        req.body.approvedDate = null;
+        req.body.rejectedDate = Date.now();
+        return next();
+    }
 
     const moduleGlobalDir = `${__dirname}/../../../modules/client/pending/`;
     const moduleDir = `${moduleGlobalDir}${module.url}`;
@@ -175,13 +192,55 @@ function approve(req, res, next){
             .then(() => fsExtra.ensureFile(publicIndexFile))
             .then(()=>{
                 fs.writeFileSync(publicIndexFile, stdOut);
-                return _onSuccess(res, 'Successfully submitted')
+
+                req.body.approvedDate = Date.now();
+                req.body.rejectedDate = null;
+                return next();
             })
             .catch(err => _onError(res, err, false));
     });
 
 }
 
+function sendRejectApproveHook(req, res, next){
+    const options = {
+        method: 'POST',
+        uri: `${APIURL}/modules/hook/${req.module.data._id}`,
+        body:req.body,
+        headers: {
+            'x-access-token': HookSecretKey,
+            'referer':req.headers.referer
+        },
+        json: true,
+    };
+
+    return request(options)
+        .then(complete=> _onSuccess(res, {data:'Successfully submitted'}))
+        .catch(err => _onError(res, err, false));
+
+}
+
+function check(req, res, next){
+    console.log('headers', req.headers);
+    const moduleID = req.body.moduleId || req.query.moduleId || req.params.moduleId;
+    const options = {
+        method: 'GET',
+        uri: `${APIURL}/modules/hook/auth/${moduleID}`,
+        qs:{},
+        headers: {
+            'x-access-token': HookSecretKey,
+            'referer':req.headers.referer,
+            'rodin-key':req.headers['rodin-key']
+        },
+        json: true,
+    };
+    request(options)
+        .then((response) => _onSuccess(res, 'Authorized'))
+        .catch((err)  => {
+            req.error  = err.error.error ? err.error.error.message : 'Please contact with support';
+            return res.status(400).json({success:false, data:req.error});
+        });
+}
 
 function _onSuccess(res, data){
     return res.status(200).json({success:true, data});
@@ -193,4 +252,4 @@ function _onError(res, err, info){
 }
 
 
-export default {getModule, validateSyntax, submit, validate, serverFile, approve}
+export default {getModule, validateSyntax, submit, validate, serverFile, approveReject, sendRejectApproveHook, check}

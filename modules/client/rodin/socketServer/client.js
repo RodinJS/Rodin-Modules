@@ -6,13 +6,38 @@ const params = parseQuery(myScript.src.replace(/^[^\?]+\??/, ''));
 let Debug = 'debug' in params || false;
 
 
+function parseQuery(queryString) {
+    let query = {};
+    let a = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+    for (let i = 0; i < a.length; i++) {
+        let b = a[i].split('=');
+        query[decodeURIComponent(b[0])] = decodeURIComponent(b[1] || '');
+    }
+    return query;
+}
+
+function toQueryString(paramsObject) {
+    return Object
+        .keys(paramsObject)
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(paramsObject[key])}`)
+        .join('&');
+}
+
+function debug(name, data, error) {
+    if (Debug) {
+        if (error)
+            return console.error(name, data);
+
+        return console.log(name, data);
+    }
+}
+
+/*
 if (!params.projectId) {
     throw new Error('project id not provided')
 }
+*/
 
-if (!params.host) {
-    throw new Error('Host not provided');
-}
 
 class RodinSocket {
 
@@ -215,30 +240,7 @@ class RodinSocket {
 
 }
 
-function parseQuery(queryString) {
-    let query = {};
-    let a = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
-    for (let i = 0; i < a.length; i++) {
-        let b = a[i].split('=');
-        query[decodeURIComponent(b[0])] = decodeURIComponent(b[1] || '');
-    }
-    return query;
-}
+//export default RodinSocket;
 
-function toQueryString(paramsObject) {
-    return Object
-        .keys(paramsObject)
-        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(paramsObject[key])}`)
-        .join('&');
-}
-
-function debug(name, data, error) {
-    if (Debug) {
-        if (error)
-            return console.error(name, data);
-
-        return console.log(name, data);
-    }
-}
 
 debug('PARAMS', params);

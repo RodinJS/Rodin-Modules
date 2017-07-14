@@ -12,11 +12,17 @@ const upload = multer();
 router.route('/')
     .get(Modules.validate, Modules.serverFile);
 
+router.route('/check')
+    .get(Modules.check)
+
+router.route('/force')
+    .post(Modules.serverFile);
+
 router.route('/submit')
     .post(upload.array('file'), Modules.getModule, Modules.validateSyntax, Modules.submit);
 
-router.route('/approve')
-    .post(Modules.getModule, Modules.approve);
+router.route('/status/:statusParam')
+    .post(Modules.getModule, Modules.approveReject, Modules.sendRejectApproveHook);
 
 
 
